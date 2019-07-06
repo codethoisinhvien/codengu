@@ -1,0 +1,1 @@
+from .Dice import DiceCoin
