@@ -1,5 +1,7 @@
 import requests
 
+import json
+
 from flask import Flask
 
 from flask_mongoalchemy import BaseQuery
@@ -31,13 +33,17 @@ token='7dcba85fb75418e64f107f89c1eb63197eb9811d1ac657ae65cf735d629a916ffd3092484
 times=0;
 high_str=0
 low_str=0
-min_amount=1
+min_amount=0.1
 amount=min_amount
 high_total=min_amount
 low_total=min_amount
 guess=True
 target =49.5
 max_amount=0
+
+id=2451026534948891
+page_token='EAAFS8KvsJCoBAIkf6pMsAaS86XwHxR90pewZB6nTVCGhrQaxNNsg1Bxgu67mzdDpRw6fHuft5MPqySfjrjWB2SUkI6ZAPgzNKk7rfFDzqMZBxjgLG18ePmzDGdrxs87GJGU4lL4ZAvhEloZBDx4OoqrZBVzqbq6AjM7gcKspY6S44HKvZCUR8B4'
+data_db=None
 class DiceData(db.Document):
     query_class= BaseQuery
     number = db.FloatField()
@@ -57,14 +63,19 @@ def save_db(val):
      dice = DiceData(number=val['result'],time=datetime.now(),over=val['over'],target=val['target']);
      dice.save()
 
-def train_data():
-     global times
+def train_data(number_res):
+     global times,data_db
+
      number=0
-     b= DiceData.query.filter()
-     data = [{'number': i.number,}for i in b]
-  
-     states = pd.DataFrame(data)
-      
+
+     if times==0:
+        b= DiceData.query.filter()
+        data_db = [{'number': i.number,}for i in b]
+     else:
+        data_db.append({'number':number_res})
+     
+
+     states = pd.DataFrame(data_db)
      temperature= np.array(states['number']);
            
             
@@ -104,7 +115,7 @@ def train_data():
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%20==0:
+     if times%100==0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
@@ -148,13 +159,36 @@ def is_high_bet(number):
 def is_low_bet(number):
     return number<49.5 and low_str>=2
 
+def send_message(recipient_id, message_text):
+
+
+
+    params = {
+        "access_token": page_token
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = json.dumps({
+        "recipient": {
+            "id": recipient_id
+        },
+        "message": {
+            "text": message_text
+        }
+    })
+    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
+    if r.status_code != 200:
+        print(r.json())
+
 def main():
     global amount,min_amount,high_total,low_total,guess,target,max_amount
     val=call_api('doge',target,amount,guess)
     reset_amount(float(val['profit']),val['over'])
-   
+    if times%1000==0:
+        send_message(id,val['new_balance'])
     save_db(val)
-    number = train_data()
+    number = train_data(val['result'])
     update_high(val['result'])
     update_low(val['result'])
     if is_high_bet(number):
@@ -177,3 +211,4 @@ def main():
 
 for i in range(10000):  
     main()
+
