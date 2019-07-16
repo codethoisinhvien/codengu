@@ -110,31 +110,5 @@ class DiceCoin:
                 if float(val['profit'])>self.min:
                     if self.guess==True:
                          self.totalH= self.min+self.sum*0.01
-                         self.sum= self.sum*0.99
-                    if self.guess==False:
-                         
-
-                         self.totalM= self.min+self.sum*0.01
-                         self.sum= self.sum*0.99
-                else:
-                     if self.guess==True:
-                         self.totalH= self.totalH*2+self.min
-                         self.totalH= self.totalH+self.sum*0.01
-                         self.sum= self.sum*0.99
-                     if self.guess==False:
-                         self.totalM= self.totalM*2+self.min
-                         self.totalM= self.totalM+self.sum*0.01
-                         self.sum= self.sum*0.99
-                if self.totalH>1000*self.min:
-                    self.sum=self.sum+self.totalH
-                    self.totalH=self.min
-                if self.totalM>1000*self.min:
-                    self.sum=self.sum+self.totalM
-                    self.totalM=self.min
-
-              
-                dice = DiceData(number=val['result'],time=datetime.now(),over=val['over'],target=val['target']);
-                dice.save()
-    
-
+ 
 
