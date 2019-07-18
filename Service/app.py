@@ -33,7 +33,7 @@ token='7dcba85fb75418e64f107f89c1eb63197eb9811d1ac657ae65cf735d629a916ffd3092484
 times=0;
 high_str=0
 low_str=0
-min_amount=0.1
+min_amount=0.05
 amount=min_amount
 high_total=min_amount
 low_total=min_amount
@@ -87,7 +87,7 @@ def train_data(number_res):
 
      y_train = temperature[1:(len(temperature)-(num_periods))+f_horizon]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(f_horizon+1):][:1].reshape(-1, num_periods, 1)
+     X_test =temperature[-(f_horizon):][:1].reshape(-1, num_periods, 1)
      Y_test =temperature[-(num_periods):].reshape(-1, num_periods, 1)
      tf.reset_default_graph()
 
@@ -116,7 +116,7 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%50==0:
+     if times%100==0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
@@ -152,14 +152,14 @@ def reset_amount(amount,guess):
     if amount>min_amount and guess==False:
         low_total=min_amount
     if(amount<0):
-        high_total+=2*min_amount +total*0.005
-        low_total+=2*min_amount +total*0.005
+        high_total+=2*min_amount 
+        low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 and high_str>=2
+    return number>50.5 and high_str>=1 and high_str<3
 
 def is_low_bet(number):
-    return number<49.5 and low_str>=2
+    return number<49.5 and low_str>=1 and high_str <3
 
 def total_change():
     global amount
@@ -218,11 +218,6 @@ def main():
       amount=min_amount
     if max_amount<amount:
          max_amount=amount
-    if high_total>2000*min_amount:
-        high_total=min_amount
-    if low_total>2000*min_amount:
-        low_total=min_amount
-    total_change()
     print(max_amount)
 
 
