@@ -40,6 +40,7 @@ low_total=min_amount
 guess=True
 target =49.5
 max_amount=0
+total=0
 
 id=2451026534948891
 page_token='EAAFS8KvsJCoBAIkf6pMsAaS86XwHxR90pewZB6nTVCGhrQaxNNsg1Bxgu67mzdDpRw6fHuft5MPqySfjrjWB2SUkI6ZAPgzNKk7rfFDzqMZBxjgLG18ePmzDGdrxs87GJGU4lL4ZAvhEloZBDx4OoqrZBVzqbq6AjM7gcKspY6S44HKvZCUR8B4'
@@ -115,7 +116,7 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%100==0:
+     if times%50==0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
@@ -145,20 +146,26 @@ def update_low(number):
         low_str=0   
 
 def reset_amount(amount,guess):
-    global min_amount,high_total,low_total
+    global min_amount,high_total,low_total,total
     if amount>min_amount and guess==True:
         high_total=min_amount
     if amount>min_amount and guess==False:
         low_total=min_amount
     if(amount<0):
-        high_total+=2*min_amount
-        low_total+=2*min_amount
+        high_total+=2*min_amount +total*0.005
+        low_total+=2*min_amount +total*0.005
+        total=total*0.9
 def is_high_bet(number):
     return number>50.5 and high_str>=2
 
 def is_low_bet(number):
     return number<49.5 and low_str>=2
 
+def total_change():
+    global amount
+    if amount>2000*min_amount:
+       total =amount*0.9;
+       amount= amount*0.1
 def send_message(recipient_id, message_text):
 
 
@@ -183,14 +190,20 @@ def send_message(recipient_id, message_text):
 
 def main():
     global amount,min_amount,high_total,low_total,guess,target,max_amount
+    
     val=call_api('doge',target,amount,guess)
+
     reset_amount(float(val['profit']),val['over'])
+
     if times%1000==0:
         send_message(id,val['new_balance'])
     save_db(val)
+
     number = train_data(val['result'])
+
     update_high(val['result'])
     update_low(val['result'])
+
     if is_high_bet(number):
        target=50.49
        guess=True
@@ -205,7 +218,11 @@ def main():
       amount=min_amount
     if max_amount<amount:
          max_amount=amount
-    
+    if high_total>2000*min_amount:
+        high_total=min_amount
+    if low_total>2000*min_amount:
+        low_total=min_amount
+    total_change()
     print(max_amount)
 
 
