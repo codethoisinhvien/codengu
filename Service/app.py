@@ -87,7 +87,7 @@ def train_data(number_res):
 
      y_train = temperature[1:(len(temperature)-(num_periods))+f_horizon]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(f_horizon):][:1].reshape(-1, num_periods, 1)
+     X_test =temperature[-(f_horizon+1):][:1].reshape(-1, num_periods, 1)
      Y_test =temperature[-(num_periods):].reshape(-1, num_periods, 1)
      tf.reset_default_graph()
 
@@ -156,10 +156,10 @@ def reset_amount(amount,guess):
         low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 and high_str>=1 and high_str<3
+    return number>50.5 and high_str>=2 and high_str<4
 
 def is_low_bet(number):
-    return number<49.5 and low_str>=1 and high_str <3
+    return number<49.5 and low_str>=2 and high_str <4
 
 def total_change():
     global amount
