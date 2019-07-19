@@ -82,7 +82,7 @@ def train_data(number_res):
             
      num_periods =1
      f_horizon = 1
-     x_train = temperature[:(len(temperature))]
+     x_train = temperature[:(len(temperature)-(num_periods))]
      x_batches = x_train.reshape(-1, num_periods, 1)
 
      y_train = temperature[1:(len(temperature))+f_horizon]
