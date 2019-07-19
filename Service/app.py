@@ -87,7 +87,7 @@ def train_data(number_res):
 
      y_train = temperature[1:(len(temperature)-(num_periods))+f_horizon]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(f_horizon+1):][:1].reshape(-1, num_periods, 1)
+     X_test =temperature[-(f_horizon):][:1].reshape(-1, num_periods, 1)
      Y_test =temperature[-(num_periods):].reshape(-1, num_periods, 1)
      tf.reset_default_graph()
 
