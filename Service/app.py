@@ -82,7 +82,7 @@ def train_data(number_res):
             
      num_periods =1
      f_horizon = 1
-     x_train = temperature[:(len(temperature)-(num_periods))]
+     x_train = temperature[:(len(temperature))]
      x_batches = x_train.reshape(-1, num_periods, 1)
 
      y_train = temperature[1:(len(temperature))+f_horizon]
@@ -116,7 +116,7 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%50==0:
+     if times%20==0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
