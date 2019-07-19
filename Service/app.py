@@ -33,7 +33,7 @@ token='7dcba85fb75418e64f107f89c1eb63197eb9811d1ac657ae65cf735d629a916ffd3092484
 times=0;
 high_str=0
 low_str=0
-min_amount=0.1
+min_amount=0.05
 amount=min_amount
 high_total=min_amount
 low_total=min_amount
@@ -85,7 +85,7 @@ def train_data(number_res):
      x_train = temperature[:(len(temperature)-(num_periods))]
      x_batches = x_train.reshape(-1, num_periods, 1)
 
-     y_train = temperature[1:(len(temperature)-(num_periods))+f_horizon]
+     y_train = temperature[1:(len(temperature))+f_horizon]
      y_batches = y_train.reshape(-1, num_periods, 1)
      X_test =temperature[-(f_horizon+1):][:1].reshape(-1, num_periods, 1)
      Y_test =temperature[-(num_periods):].reshape(-1, num_periods, 1)
