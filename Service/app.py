@@ -33,7 +33,7 @@ token='7dcba85fb75418e64f107f89c1eb63197eb9811d1ac657ae65cf735d629a916ffd3092484
 times=0;
 high_str=0
 low_str=0
-min_amount=0.05
+min_amount=0.1
 amount=min_amount
 high_total=min_amount
 low_total=min_amount
@@ -116,7 +116,7 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%100==0:
+     if times%50=0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
