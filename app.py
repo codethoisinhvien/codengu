@@ -41,6 +41,7 @@ guess=True
 target =49.5
 max_amount=0
 total=0
+number=0
 
 id=2451026534948891
 page_token='EAAFS8KvsJCoBAIkf6pMsAaS86XwHxR90pewZB6nTVCGhrQaxNNsg1Bxgu67mzdDpRw6fHuft5MPqySfjrjWB2SUkI6ZAPgzNKk7rfFDzqMZBxjgLG18ePmzDGdrxs87GJGU4lL4ZAvhEloZBDx4OoqrZBVzqbq6AjM7gcKspY6S44HKvZCUR8B4'
@@ -75,7 +76,7 @@ def train_data(number_res):
      else:
         data_db.append({'number':number_res})
      
-
+     
      states = pd.DataFrame(data_db)
      temperature= np.array(states['number']);
            
@@ -92,7 +93,7 @@ def train_data(number_res):
      tf.reset_default_graph()
 
      rnn_size = 100
-     learning_rate=0.0001
+     learning_rate=0.001
 
      X = tf.placeholder(tf.float32, [None, num_periods, 1])
      Y = tf.placeholder(tf.float32, [None, num_periods, 1])
@@ -116,7 +117,7 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%20==0:
+     if times%1000==0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
@@ -131,16 +132,16 @@ def train_data(number_res):
          number=y_pred[0][0][0]
      return number
 
-def update_high(number):
+def update_high(number,guess_number):
     global high_str
-    if number>50.5:
+    if number>50.5 and guess_number>50.5:
        high_str+=1
     else:
         high_str=0
 
-def update_low(number):
+def update_low(number,guess_number):
     global low_str
-    if number<49.5:
+    if number<49.5 and guess_number<49.5:
        low_str+=1
     else:
         low_str=0   
@@ -152,14 +153,14 @@ def reset_amount(amount,guess):
     if amount>min_amount and guess==False:
         low_total=min_amount
     if(amount<0):
-        high_total+=2*min_amount 
-        low_total+=2*min_amount 
+        high_total+=min_amount 
+        low_total+=min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 and high_str>=1 and high_str<3
+    return number>50.5 and (high_str==1 or low_str==1 )
 
 def is_low_bet(number):
-    return number<49.5 and low_str>=1 and high_str <3
+    return number<49.5 and (low_str==2 or high_str==1)
 
 def total_change():
     global amount
@@ -189,20 +190,20 @@ def send_message(recipient_id, message_text):
         print(r.json())
 
 def main():
-    global amount,min_amount,high_total,low_total,guess,target,max_amount
+    global amount,min_amount,high_total,low_total,guess,target,max_amount,number
     
     val=call_api('doge',target,amount,guess)
 
     reset_amount(float(val['profit']),val['over'])
 
-    if times%1000==0:
+    if times%100==0:
         send_message(id,val['new_balance'])
     save_db(val)
-
+    update_high(val['result'],number)
+    update_low(val['result'],number)
     number = train_data(val['result'])
 
-    update_high(val['result'])
-    update_low(val['result'])
+   
 
     if is_high_bet(number):
        target=50.49
