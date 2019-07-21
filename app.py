@@ -88,7 +88,7 @@ def train_data(number_res):
 
      y_train = temperature[1:(len(temperature))+f_horizon]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(f_horizon+1):][:1].reshape(-1, num_periods, 1)
+     X_test =temperature[-(f_horizon):][:1].reshape(-1, num_periods, 1)
      Y_test =temperature[-(num_periods):].reshape(-1, num_periods, 1)
      tf.reset_default_graph()
 
@@ -117,7 +117,7 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%1000==0:
+     if times%100==0:
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
@@ -153,8 +153,8 @@ def reset_amount(amount,guess):
     if amount>min_amount and guess==False:
         low_total=min_amount
     if(amount<0):
-        high_total+=min_amount 
-        low_total+=min_amount 
+        high_total+=2*min_amount 
+        low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
     return number>50.5 and (high_str==1 or low_str==1 )
