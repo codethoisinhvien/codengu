@@ -29,7 +29,7 @@ app.config['MONGOALCHEMY_CONNECTION_STRING']="mongodb://root:Phongthien1308@ds24
 db = MongoAlchemy(app)
 # var
 api='https://www.bitsler.com/api/bet-dice'
-token='7dcba85fb75418e64f107f89c1eb63197eb9811d1ac657ae65cf735d629a916ffd309248486935cb5ef36b5b0eee4c240d2e6cc19accda2b44d18c0e60344088'
+token='dfa6a226bbe9d38b695517f7d5012122133813887d1695afa3ca954da2c9b6467bd0cacf19eff0b231d36a894e684e29726ff572c216c076a4284feb94265baa'
 times=0;
 high_str=0
 low_str=0
@@ -83,13 +83,13 @@ def train_data(number_res):
             
      num_periods =1
      f_horizon = 1
-     x_train = temperature[:(len(temperature)-(num_periods))]
+     x_train = temperature[:(len(temperature)-num_periods)]
      x_batches = x_train.reshape(-1, num_periods, 1)
 
-     y_train = temperature[1:(len(temperature))+f_horizon]
+     y_train = temperature[1:(len(temperature))]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(f_horizon):][:1].reshape(-1, num_periods, 1)
-     Y_test =temperature[-(num_periods):].reshape(-1, num_periods, 1)
+     X_test =temperature[-(f_horizon+num_periods):][:1].reshape(-1, num_periods, 1)
+     Y_test =temperature[-(f_horizon):].reshape(-1, num_periods, 1)
      tf.reset_default_graph()
 
      rnn_size = 100
@@ -124,24 +124,25 @@ def train_data(number_res):
         saver = tf.train.Saver()
         save_path = saver.save(sess, "models/model.ckpt")
      times=times+1
+     X_test2 =temperature[-(num_periods):][:1].reshape(-1, num_periods, 1)
      saver = tf.train.Saver()
      with tf.Session() as sess:
   # Restore variables from disk.
          saver.restore(sess, "models/model.ckpt")
-         y_pred=sess.run(outputs, feed_dict={X: X_test})
+         y_pred=sess.run(outputs, feed_dict={X: X_test2})
          number=y_pred[0][0][0]
      return number
 
 def update_high(number,guess_number):
     global high_str
-    if number>50.5 and guess_number>50.5:
+    if number>50.5 and guess_number<50.5:
        high_str+=1
     else:
         high_str=0
 
 def update_low(number,guess_number):
     global low_str
-    if number<49.5 and guess_number<49.5:
+    if number<49.5 and guess_number>49.5:
        low_str+=1
     else:
         low_str=0   
@@ -150,17 +151,19 @@ def reset_amount(amount,guess):
     global min_amount,high_total,low_total,total
     if amount>min_amount and guess==True:
         high_total=min_amount
+        low_total=min_amount
     if amount>min_amount and guess==False:
         low_total=min_amount
+        high_total=min_amount
     if(amount<0):
         high_total+=2*min_amount 
         low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 and (high_str==1 or low_str==1 )
+    return number>50.5 
 
 def is_low_bet(number):
-    return number<49.5 and (low_str==2 or high_str==1)
+    return number<49.5
 
 def total_change():
     global amount
@@ -197,7 +200,8 @@ def main():
     reset_amount(float(val['profit']),val['over'])
 
     if times%100==0:
-        send_message(id,val['new_balance'])
+       # send_message(id,val['new_balance'])
+       pass
     save_db(val)
     update_high(val['result'],number)
     update_low(val['result'],number)
@@ -208,17 +212,17 @@ def main():
     if is_high_bet(number):
        target=50.49
        guess=True
-       amount=high_total
+       amount=high_total+low_total
        high_total=high_total+amount+min_amount
     elif is_low_bet(number):
         target=49.5
         guess=False
-        amount= low_total
+        amount= low_total+high_total
         low_total= low_total+amount+min_amount
+        
     else:
       amount=min_amount
-    if max_amount<amount:
-         max_amount=amount
+    
     print(max_amount)
 
 
