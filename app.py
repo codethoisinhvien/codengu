@@ -33,7 +33,7 @@ token='dfa6a226bbe9d38b695517f7d5012122133813887d1695afa3ca954da2c9b6467bd0cacf1
 times=0;
 high_str=0
 low_str=0
-min_amount=0.05
+min_amount=0.2
 amount=min_amount
 high_total=min_amount
 low_total=min_amount
@@ -146,6 +146,12 @@ def update_low(number,guess_number):
        low_str+=1
     else:
         low_str=0   
+def is_true(profit):
+    global low_str
+    if profit>0:
+        low_str=0
+    else:
+      low_str=low_str+1
 
 def reset_amount(amount,guess):
     global min_amount,high_total,low_total,total
@@ -160,10 +166,10 @@ def reset_amount(amount,guess):
         low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 
+    return number>50.5 and low_str<1
 
 def is_low_bet(number):
-    return number<49.5
+    return number<49.5 and low_str<1
 
 def total_change():
     global amount
@@ -203,8 +209,9 @@ def main():
        # send_message(id,val['new_balance'])
        pass
     save_db(val)
-    update_high(val['result'],number)
-    update_low(val['result'],number)
+    # update_high(val['result'],number)
+    # update_low(val['result'],number)
+    is_true(float(val['profit']))
     number = train_data(val['result'])
 
    
@@ -222,7 +229,8 @@ def main():
         
     else:
       amount=min_amount
-    
+    if amount >max_amount:
+        max_amount=amount
     print(max_amount)
 
 
