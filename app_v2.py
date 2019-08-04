@@ -124,7 +124,7 @@ def train_data(number_res):
         saver = tf.train.Saver()
         save_path = saver.save(sess, "models/model.ckpt")
      times=times+1
-     X_test2 =temperature[-(1):][:1].reshape(-1, num_periods, 1)
+     X_test2 =temperature[-(0):][:1].reshape(-1, num_periods, 1)
      saver = tf.train.Saver()
      with tf.Session() as sess:
   # Restore variables from disk.
@@ -146,18 +146,12 @@ def update_low(number,guess_number):
        low_str+=1
     else:
         low_str=0   
-def is_true(number,guess_number):
+def is_true(profit):
     global low_str
-    if number<49.5 and guess_number>49.5:
-        
-        low_str=low_str+1
-    elif  number>50.5 and guess_number <50.5:
-        low_str=low_str+1
-    elif  number>50.5 and guess_number >50.5:
+    if profit>0:
         low_str=0
-    elif number<49.5 and guess_number<49.5:
-         low_str=0
-    
+    else:
+      low_str=low_str+1
 
 def reset_amount(amount,guess):
     global min_amount,high_total,low_total,total
@@ -172,11 +166,11 @@ def reset_amount(amount,guess):
         low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 and low_str>2 and low_str<6
+    return number>50.5
 
 
 def is_low_bet(number):
-    return number<49.5 and low_str >2 and low_str <6
+    return number<49.5 
 
 
 def total_change():
@@ -186,25 +180,29 @@ def total_change():
        amount= amount*0.1
 def send_message(recipient_id, message_text):
 
+    try:
 
-
-    params = {
+     params = {
         "access_token": page_token
-    }
-    headers = {
+     }
+     headers = {
         "Content-Type": "application/json"
-    }
-    data = json.dumps({
+     }
+     data = json.dumps({
         "recipient": {
             "id": recipient_id
         },
         "message": {
             "text": message_text
         }
-    })
-    r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
-    if r.status_code != 200:
+     })
+     r = requests.post("https://graph.facebook.com/v2.6/me/messages", params=params, headers=headers, data=data)
+     if r.status_code != 200:
         print(r.json())
+        return 1
+    except:
+        return 0
+
 
 def main():
     global amount,min_amount,high_total,low_total,guess,target,max_amount,number
@@ -214,18 +212,14 @@ def main():
     reset_amount(float(val['profit']),val['over'])
 
     if times%100==0:
-        try:
-          send_message(id,val['new_balance'])
-        except expression as identifier:
-            pass
-       
-      
+       # send_message(id,val['new_balance'])
+       pass
     save_db(val)
     # update_high(val['result'],number)
     # update_low(val['result'],number)
-    is_true(val['result'],number)
+    is_true(float(val['profit']))
     number = train_data(val['result'])
-    print(number)
+
    
 
     if is_high_bet(number):
