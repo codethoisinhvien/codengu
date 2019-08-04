@@ -33,8 +33,12 @@ token='dfa6a226bbe9d38b695517f7d5012122133813887d1695afa3ca954da2c9b6467bd0cacf1
 times=0;
 high_str=0
 low_str=0
-min_amount=0.2
+min_amount=0.05
 amount=min_amount
+
+
+
+
 high_total=min_amount
 low_total=min_amount
 guess=True
@@ -66,7 +70,7 @@ def save_db(val):
      dice.save()
 
 def train_data(number_res):
-     global times,data_db
+     global times,data_db,low_str
 
      number=0
 
@@ -117,10 +121,12 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if times%100==0:
+     if low_str>5 or times== 0:
+        low_str=0
         for epoch in range(epochs):
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
+            
         saver = tf.train.Saver()
         save_path = saver.save(sess, "models/model.ckpt")
      times=times+1
@@ -172,11 +178,11 @@ def reset_amount(amount,guess):
         low_total+=2*min_amount 
         total=total*0.9
 def is_high_bet(number):
-    return number>50.5 and low_str>2 and low_str<6
+    return number>50.5 
 
 
 def is_low_bet(number):
-    return number<49.5 and low_str >2 and low_str <6
+    return number<49.5 
 
 
 def total_change():
@@ -207,7 +213,8 @@ def send_message(recipient_id, message_text):
         print(r.json())
 
 def main():
-    global amount,min_amount,high_total,low_total,guess,target,max_amount,number
+    
+    global amount,min_amount,high_total,low_total,guess,target,max_amount,number,low_str
     
     val=call_api('doge',target,amount,guess)
 
@@ -215,24 +222,24 @@ def main():
 
     if times%100==0:
         try:
-          send_message(id,val['new_balance'])
+         send_message(id,val['new_balance'])
         except expression as identifier:
-            pass
+          pass
        
       
     save_db(val)
-    # update_high(val['result'],number)
-    # update_low(val['result'],number)
+    #update_high(val['result'],number)
+    #update_low(val['result'],number)
     is_true(val['result'],number)
     number = train_data(val['result'])
-    print(number)
+    # print(number)
    
 
     if is_high_bet(number):
-       target=50.49
-       guess=True
-       amount=high_total+low_total
-       high_total=high_total+amount+min_amount
+        target=50.49
+        guess=True
+        amount=high_total+low_total
+        high_total=high_total+amount+min_amount
     elif is_low_bet(number):
         target=49.5
         guess=False
@@ -240,9 +247,9 @@ def main():
         low_total= low_total+amount+min_amount
         
     else:
-      amount=min_amount
+       amount=min_amount
     if amount >max_amount:
-        max_amount=amount
+         max_amount=amount
     print(max_amount)
 
 
