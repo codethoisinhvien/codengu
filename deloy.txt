@@ -1,9 +1,2 @@
-az vm create \
---name myVM \
---resource-group Learn-6f4a3016-2178-4153-91b1-95a91e43c91f\
---image Win2016Datacenter \
---size Standard_DS2_v2 \
---location eastus \
---admin-username phongthien \
---admin-password 13081999
-
+document 100000
+min 0.1

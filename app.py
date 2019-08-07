@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 
 import math
 
+
 app = Flask(__name__)
 
 app.config['MONGOALCHEMY_DATABASE'] = 'heroku_cjxxw05p'
@@ -33,7 +34,7 @@ token='dfa6a226bbe9d38b695517f7d5012122133813887d1695afa3ca954da2c9b6467bd0cacf1
 times=0;
 high_str=0
 low_str=0
-min_amount=0.05
+min_amount=0.1
 amount=min_amount
 
 
@@ -83,17 +84,17 @@ def train_data(number_res):
      
      states = pd.DataFrame(data_db)
      temperature= np.array(states['number']);
-           
+          
             
      num_periods =1
      f_horizon = 1
-     x_train = temperature[:(len(temperature)-num_periods)]
+     x_train = temperature[:(len(temperature)-1)]
      x_batches = x_train.reshape(-1, num_periods, 1)
 
      y_train = temperature[1:(len(temperature))]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(f_horizon+num_periods):][:1].reshape(-1, num_periods, 1)
-     Y_test =temperature[-(f_horizon):].reshape(-1, num_periods, 1)
+     X_test =temperature[-(1000):][:1000].reshape(-1, num_periods, 1)
+   
      tf.reset_default_graph()
 
      rnn_size = 100
@@ -124,19 +125,21 @@ def train_data(number_res):
      if low_str>5 or times== 0:
         low_str=0
         for epoch in range(epochs):
+
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
             
         saver = tf.train.Saver()
         save_path = saver.save(sess, "models/model.ckpt")
      times=times+1
-     X_test2 =temperature[-(1):][:1].reshape(-1, num_periods, 1)
+  
      saver = tf.train.Saver()
      with tf.Session() as sess:
   # Restore variables from disk.
          saver.restore(sess, "models/model.ckpt")
-         y_pred=sess.run(outputs, feed_dict={X: X_test2})
-         number=y_pred[0][0][0]
+         y_pred=sess.run(outputs, feed_dict={X: X_test})
+        
+         number=y_pred[999][0][0]
      return number
 
 def update_high(number,guess_number):
@@ -170,26 +173,24 @@ def reset_amount(amount,guess):
     if amount>min_amount and guess==True:
         high_total=min_amount
         low_total=min_amount
+  
     if amount>min_amount and guess==False:
         low_total=min_amount
-        high_total=min_amount
+        high_total=min_amount 
+      
     if(amount<0):
-        high_total+=2*min_amount 
-        low_total+=2*min_amount 
-        total=total*0.9
+        high_total=high_total+min_amount*2
+        low_total = low_total+min_amount*2
+        
+      
 def is_high_bet(number):
-    return number>50.5 
+    return number>50.5
 
 
 def is_low_bet(number):
     return number<49.5 
 
 
-def total_change():
-    global amount
-    if amount>2000*min_amount:
-       total =amount*0.9;
-       amount= amount*0.1
 def send_message(recipient_id, message_text):
 
 
@@ -214,27 +215,24 @@ def send_message(recipient_id, message_text):
 
 def main():
     
-    global amount,min_amount,high_total,low_total,guess,target,max_amount,number,low_str
+    global amount,min_amount,high_total,low_total,guess,target,max_amount,number,low_str,total
     
     val=call_api('doge',target,amount,guess)
+    
+  
+    if val['success']==False:
+         send_message(id,"finshed ")
 
     reset_amount(float(val['profit']),val['over'])
-
-    if times%100==0:
-        try:
-         send_message(id,val['new_balance'])
-        except expression as identifier:
-          pass
+    is_true(val['result'],number)
        
       
     save_db(val)
-    #update_high(val['result'],number)
-    #update_low(val['result'],number)
-    is_true(val['result'],number)
+   
+   
     number = train_data(val['result'])
     # print(number)
-   
-
+    
     if is_high_bet(number):
         target=50.49
         guess=True
@@ -248,10 +246,11 @@ def main():
         
     else:
        amount=min_amount
+  
     if amount >max_amount:
          max_amount=amount
     print(max_amount)
-
+    print(total)
 
 for i in range(1000000):  
     main()
