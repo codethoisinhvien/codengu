@@ -47,7 +47,7 @@ target =49.5
 max_amount=0
 total=0
 number=0
-
+max_err=0
 id=2451026534948891
 page_token='EAAFS8KvsJCoBAIkf6pMsAaS86XwHxR90pewZB6nTVCGhrQaxNNsg1Bxgu67mzdDpRw6fHuft5MPqySfjrjWB2SUkI6ZAPgzNKk7rfFDzqMZBxjgLG18ePmzDGdrxs87GJGU4lL4ZAvhEloZBDx4OoqrZBVzqbq6AjM7gcKspY6S44HKvZCUR8B4'
 data_db=None
@@ -59,7 +59,6 @@ class DiceData(db.Document):
     target = db.FloatField()
 
 
-#function
 def call_api(coin,target,amount,guess):
       data={'access_token':token,'currency':coin,'target':target,'amount':amount,'over':guess}
       res= requests.post(api,data=data)
@@ -70,8 +69,9 @@ def save_db(val):
      dice = DiceData(number=val['result'],time=datetime.now(),over=val['over'],target=val['target']);
      dice.save()
 
+
 def train_data(number_res):
-     global times,data_db,low_str
+     global times,data_db,max_err
 
      number=0
 
@@ -93,11 +93,11 @@ def train_data(number_res):
 
      y_train = temperature[1:(len(temperature))]
      y_batches = y_train.reshape(-1, num_periods, 1)
-     X_test =temperature[-(1000):][:1000].reshape(-1, num_periods, 1)
+     X_test =temperature[-(1):][:1].reshape(-1, num_periods, 1)
    
      tf.reset_default_graph()
 
-     rnn_size = 100
+     rnn_size = 120
      learning_rate=0.001
 
      X = tf.placeholder(tf.float32, [None, num_periods, 1])
@@ -122,8 +122,8 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if low_str>5 or times== 0:
-        low_str=0
+     if  times%100==0:
+        max_err=0
         for epoch in range(epochs):
 
             train_dict = {X: x_batches, Y: y_batches}
@@ -138,8 +138,10 @@ def train_data(number_res):
   # Restore variables from disk.
          saver.restore(sess, "models/model.ckpt")
          y_pred=sess.run(outputs, feed_dict={X: X_test})
-        
-         number=y_pred[999][0][0]
+         
+         number=y_pred[0][0][0]
+     
+     print(number)
      return number
 
 def update_high(number,guess_number):
@@ -152,20 +154,28 @@ def update_high(number,guess_number):
 def update_low(number,guess_number):
     global low_str
     if number<49.5 and guess_number>49.5:
-       low_str+=1
+       low_str=0
     else:
         low_str=0   
 def is_true(number,guess_number):
-    global low_str
+    global low_str,high_str,max_err
     if number<49.5 and guess_number>49.5:
-        
+       
+        high_str=0
         low_str=low_str+1
+        max_err=max_err+1
     elif  number>50.5 and guess_number <50.5:
-        low_str=low_str+1
-    elif  number>50.5 and guess_number >50.5:
-        low_str=0
-    elif number<49.5 and guess_number<49.5:
          low_str=0
+         high_str=high_str+1
+         max_err=max_err+1
+    elif  number>50.5 and guess_number >50.5:
+           low_str=0
+           high_str=0
+           max_err=0
+    elif number<49.5 and guess_number<49.5:
+           low_str=0
+           high_str=0
+           max_err=0
     
 
 def reset_amount(amount,guess):
@@ -188,7 +198,7 @@ def is_high_bet(number):
 
 
 def is_low_bet(number):
-    return number<49.5 
+    return number<49.5
 
 
 def send_message(recipient_id, message_text):
@@ -220,38 +230,43 @@ def main():
     val=call_api('doge',target,amount,guess)
     
   
-    if val['success']==False:
-         send_message(id,"finshed ")
-
-    reset_amount(float(val['profit']),val['over'])
-    is_true(val['result'],number)
-       
-      
-    save_db(val)
-   
-   
-    number = train_data(val['result'])
-    # print(number)
+    # if val['success']==False:
+    #      send_message(id,"finshed ")
     
-    if is_high_bet(number):
-        target=50.49
-        guess=True
-        amount=high_total+low_total
-        high_total=high_total+amount+min_amount
-    elif is_low_bet(number):
-        target=49.5
-        guess=False
-        amount= low_total+high_total
-        low_total= low_total+amount+min_amount
-        
-    else:
-       amount=min_amount
-  
-    if amount >max_amount:
-         max_amount=amount
-    print(max_amount)
-    print(total)
 
-for i in range(1000000):  
+    # reset_amount(float(val['profit']),val['over'])
+    # is_true(val['result'],number)
+    save_db(val)  
+      
+    
+   
+   
+    # number = train_data(val['result'])
+    # # print(number)
+    
+    # if is_high_bet(number):
+    #     target=50.49
+    #     guess=True
+    #     amount=high_total+low_total
+    #     high_total=high_total+amount+min_amount
+    # elif is_low_bet(number):
+    #     target=49.5
+    #     guess=False
+    #     amount= low_total+high_total
+    #     low_total= low_total+amount+min_amount
+        
+    # else:
+    #    amount=min_amount
+  
+    # if amount >max_amount:
+    #      max_amount=amount
+    # print(max_amount)
+    # print(total)
+
+for i in range(1000000):
+    if i>20000:
+        break 
     main()
 
+# dice = DiceData(number=63.60,time=datetime.now(),over=True,target=49.5);
+# dice.save()
