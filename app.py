@@ -230,38 +230,38 @@ def main():
     val=call_api('doge',target,amount,guess)
     
   
-    # if val['success']==False:
-    #      send_message(id,"finshed ")
+    if val['success']==False:
+         send_message(id,"finshed ")
     
 
-    # reset_amount(float(val['profit']),val['over'])
-    # is_true(val['result'],number)
+    reset_amount(float(val['profit']),val['over'])
+    is_true(val['result'],number)
     save_db(val)  
       
     
    
    
-    # number = train_data(val['result'])
-    # # print(number)
+    number = train_data(val['result'])
+    # print(number)
     
-    # if is_high_bet(number):
-    #     target=50.49
-    #     guess=True
-    #     amount=high_total+low_total
-    #     high_total=high_total+amount+min_amount
-    # elif is_low_bet(number):
-    #     target=49.5
-    #     guess=False
-    #     amount= low_total+high_total
-    #     low_total= low_total+amount+min_amount
+    if is_high_bet(number):
+        target=50.49
+        guess=True
+        amount=high_total+low_total
+        high_total=high_total+amount+min_amount
+    elif is_low_bet(number):
+        target=49.5
+        guess=False
+        amount= low_total+high_total
+        low_total= low_total+amount+min_amount
         
-    # else:
-    #    amount=min_amount
+    else:
+       amount=min_amount
   
-    # if amount >max_amount:
-    #      max_amount=amount
-    # print(max_amount)
-    # print(total)
+    if amount >max_amount:
+         max_amount=amount
+    print(max_amount)
+    print(total)
 
 for i in range(1000000):
     if i>20000:
