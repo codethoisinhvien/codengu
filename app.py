@@ -62,12 +62,14 @@ class DiceData(db.Document):
 def call_api(coin,target,amount,guess):
       data={'access_token':token,'currency':coin,'target':target,'amount':amount,'over':guess}
       res= requests.post(api,data=data)
-      print( res.json())
+      if amount>3*min_amount:
+         print( res.json())
       return res.json()
 
 def save_db(val):
      dice = DiceData(number=val['result'],time=datetime.now(),over=val['over'],target=val['target']);
      dice.save()
+     return dice
 
 
 def train_data(number_res):
@@ -91,13 +93,21 @@ def train_data(number_res):
      x_train = temperature[:(len(temperature)-1)]
      x_batches = x_train.reshape(-1, num_periods, 1)
 
+     x_train2 = temperature[:(len(temperature)-2)]
+     x_batches2 = x_train2.reshape(-1, num_periods, 1)
+
      y_train = temperature[1:(len(temperature))]
      y_batches = y_train.reshape(-1, num_periods, 1)
+    
+     y_train2 = temperature[2:(len(temperature))]
+     y_batches2 = y_train2.reshape(-1, num_periods, 1)
+
      X_test =temperature[-(1):][:1].reshape(-1, num_periods, 1)
-   
+     X_test2 =temperature[-(2):][:1].reshape(-1, num_periods, 1)
+     print(X_test2,X_test)
      tf.reset_default_graph()
 
-     rnn_size = 120
+     rnn_size = 100
      learning_rate=0.001
 
      X = tf.placeholder(tf.float32, [None, num_periods, 1])
@@ -122,15 +132,24 @@ def train_data(number_res):
      sess = tf.Session()
      init = tf.global_variables_initializer()
      sess.run(init)
-     if  times%100==0:
+     if  times%200==0:
         max_err=0
         for epoch in range(epochs):
 
             train_dict = {X: x_batches, Y: y_batches}
             sess.run(train_step, feed_dict=train_dict)
-            
         saver = tf.train.Saver()
         save_path = saver.save(sess, "models/model.ckpt")
+     sess2 = tf.Session()
+     init2 = tf.global_variables_initializer()
+     sess2.run(init)
+     if  times%200==0:
+        for epoch in range(epochs):
+
+            train_dict2 = {X: x_batches2, Y: y_batches2}
+            sess2.run(train_step, feed_dict=train_dict2)    
+        saver = tf.train.Saver()
+        save_path = saver.save(sess, "models/model2.ckpt")
      times=times+1
   
      saver = tf.train.Saver()
@@ -138,8 +157,16 @@ def train_data(number_res):
   # Restore variables from disk.
          saver.restore(sess, "models/model.ckpt")
          y_pred=sess.run(outputs, feed_dict={X: X_test})
-         
-         number=y_pred[0][0][0]
+         saver.restore(sess, "models/model2.ckpt")
+         y_pred2=sess.run(outputs, feed_dict={X: X_test2})
+         print(y_pred,y_pred2)
+         if y_pred[0][0][0]>50.5 and y_pred2[0][0][0]>50.5:
+             number=y_pred[0][0][0]
+         elif y_pred[0][0][0]<49.5 and y_pred2[0][0][0]<49.5:
+             number=y_pred[0][0][0]
+         else:
+           number= 50;
+        
      
      print(number)
      return number
@@ -153,18 +180,18 @@ def update_high(number,guess_number):
 
 def update_low(number,guess_number):
     global low_str
-    if number<49.5 and guess_number>49.5:
+    if number<49.5 and guess_number>49.5 and guess!=50:
        low_str=0
     else:
         low_str=0   
 def is_true(number,guess_number):
     global low_str,high_str,max_err
-    if number<49.5 and guess_number>49.5:
+    if number<49.5 and guess_number>49.5and guess!=50:
        
         high_str=0
         low_str=low_str+1
         max_err=max_err+1
-    elif  number>50.5 and guess_number <50.5:
+    elif  number>50.5 and guess_number <50.5 and guess!=50:
          low_str=0
          high_str=high_str+1
          max_err=max_err+1
@@ -241,8 +268,8 @@ def main():
     
    
    
-    number = train_data(val['result'])
-    # print(number)
+   number = train_data(val['result'])
+    print(number)
     
     if is_high_bet(number):
         target=50.49
@@ -264,9 +291,10 @@ def main():
     print(total)
 
 for i in range(1000000):
-    if i>20000:
+    print(i)
+    if i>10000:
         break 
     main()
 
-# dice = DiceData(number=63.60,time=datetime.now(),over=True,target=49.5);
+# dice = DiceData(number=4.87,time=datetime.now(),over=True,target=49.5);
 # dice.save()
