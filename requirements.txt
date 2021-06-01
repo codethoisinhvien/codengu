@@ -14,5 +14,5 @@ pymongo==2.8.1
 requests==2.21.0
 scikit-learn==0.20.3
 scipy==1.2.1
-urllib3==1.24.3
+urllib3==1.26.5
 Werkzeug==0.15.2
